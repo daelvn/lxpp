@@ -1,0 +1,6 @@
+-- ==== --
+-- Lxpp - Namespace Keyword
+-- Defines a public namespace
+namespace lxpp
+---- Turns into ----
+local lxpp = {}

@@ -1,0 +1,19 @@
+-- ==== --
+-- Lxpp - Define Statement
+-- Creates a function declaration with type checking
+define myPrint (string s )
+  print( "Hai" .. s )
+end
+---- Turns into ----
+local function myPrint (s)
+  lxpp.typecheck ( s, string )
+  print ( "Hai" .. s )
+end
+
+-- Type objects:
+-- string
+-- function
+-- boolean
+-- number
+-- table
+-- any

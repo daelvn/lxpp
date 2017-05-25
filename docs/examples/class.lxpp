@@ -1,0 +1,53 @@
+-- ==== --
+-- Lxpp - Class Keyword
+-- Creates a class and a class constructor
+class HttpConnection
+  url ?= ""
+  parameters ?= {}
+  headers ?= {}
+end
+---- Turns into ----
+local HttpConnection = {}
+function HttpConnection:new(_object)
+ _object = _object or {}
+ _object.url = _object.url or ""
+ _object.parameters = _object.parameters or {}
+ _object.headers = _object.headers or {}
+ setmetatable(_object, self)
+ self.__index = self
+ return _object
+end
+
+-- ==== --
+-- Lxpp - Class Extends
+-- Creates a class that extends another one
+class HttpConnection
+  url ?= ""
+  parameters ?= {}
+  headers ?= {}
+end
+
+class APIConnection extends HttpConnection
+  private url = "https://example.com/api/v3/"
+end
+---- Turns into ----
+local HttpConnection = {}
+function HttpConnection:new(_object)
+  _object = _object or {}
+  _object.url = _object.url or ""
+  _object.parameters = _object.parameters or {}
+  _object.headers = _object.headers or {}
+  -- # --
+  setmetatable(_object, self)
+  self.__index = self
+  return _object
+end
+local APIConnection = {}
+function APIConnection:new(_object)
+  _object = _object or new HttpConnection
+  _object.url = nil; local url = "https://example.com/api/v3/" -- Private
+  -- # --
+  setmetatable(_object, self)
+  self.__index = self
+  return _object
+end

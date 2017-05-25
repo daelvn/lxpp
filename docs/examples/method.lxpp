@@ -1,0 +1,25 @@
+-- ==== --
+-- Lxpp - Method Keyword
+-- Creates a method inside a class definition, works exactly as `define`
+class Dog
+  method fetch (string ball)
+    print ( "The dog fetched the ball called "..ball )
+  end
+end
+
+local Toby = new Dog
+Toby:fetch("GNU/Ball")
+---- Turns into ----
+function Dog:new(_object)
+  _object = _object or {}
+  self.fetch = function (ball)
+    if type(ball) ~= "string" then error("Type of `ball` is not `string`") end
+  end
+  -- # --
+  setmetatable(_object, self)
+  self.__index = self
+  return _object
+end
+
+local Toby = Dog:new()
+Toby:fetch("GNU/Ball")

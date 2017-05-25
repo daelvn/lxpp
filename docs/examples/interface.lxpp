@@ -1,0 +1,65 @@
+-- ==== --
+-- Lxpp - Interface Keyword
+-- Creates a set of methods which a class can extend to include them
+interface ITalk
+  method say (string s)
+    print ( s )
+  end
+end
+
+interface IWalk
+  stepsTaken ?= 0
+  method walk (number steps)
+    stepsTaken += steps
+  end
+end
+
+class Human implements ITalk, IWalk
+  name ?= "Unnamed"
+  age ?= 18
+end
+
+local Dael = new Human { name = "Dael", age = 17 }
+Dael:say( "Hello!" )
+
+---- Turns into ----
+local ITalk = {
+  say = function (s)
+    if type(s) ~= "string" then error("Type of `s` is not `string`") end
+    print ( s )
+  end
+}
+
+local IWalk = {
+  stepsTaken = 0,
+  walk = function (steps)
+    if type(steps) ~= "number" then error("Type of `steps` is not `number`") end
+    stepsTaken = stepsTaken + steps
+  end
+}
+
+-- See no-lxpp solution
+local Human = lxpp.implement(ITalk, IWalk)
+function Human:new(_object)
+  name = name or "unnamed"
+  age = age or 18
+  -- # --
+  setmetatable(_object, self)
+  self.__index = self
+  return _object
+end
+
+local Dael = Human:new { name = "Dael", age = 17 }
+Dael:say( "Hello!" )
+
+-- Without lxpp.implement
+local _, Human = pcall(function()
+    local _implemented = {}
+    for k,v in pairs(ITalk) do
+      _implemented[k] = v
+    end
+    for k,v in pairs(IWalk) do
+      _implemented[k] = v
+    end
+  end
+  )

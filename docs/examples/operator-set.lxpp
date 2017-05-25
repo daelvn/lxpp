@@ -1,0 +1,6 @@
+-- ==== --
+-- Lxpp - ?= Operator
+-- Sets a variable to a value only if the variable is already nil or false
+input ?= "example_input"
+---- Turns into ----
+input = input or "example_input"

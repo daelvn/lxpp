@@ -1,0 +1,10 @@
+-- ==== --
+-- Lxpp - Foreach Statement
+-- Iterates a table without the need of ipairs/pairs
+foreach i in myNumbers do
+  print( i )
+end
+---- Turns into ----
+for _, i in pairs(myNumbers) do
+  print ( i )
+end

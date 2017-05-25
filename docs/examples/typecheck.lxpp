@@ -1,0 +1,12 @@
+-- ==== --
+-- Lxpp - Typechecking
+-- Creates variables that always have typechecking
+local string myString = "This will be typechecked"
+print ( myString )
+local string anotherString = 15
+print ( anotherString )
+---- Turns into ----
+local myString = "This will be typechecked"
+print ( type(myString) == "string" and myString or error("`myString` is not type `string`") )
+local anotherString = 15
+print ( type(anotherString) == "string" and anotherString or error("`anotherString` is not type `string`") )

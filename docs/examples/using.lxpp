@@ -1,0 +1,15 @@
+-- ==== --
+-- Lxpp - Using Statement
+-- Wraps the block body in a pcall with the exception of the local assignment
+using i = 5 do
+  local ii = 2
+  print( i + ii )
+end
+---- Turns into ----
+do local i = 5
+  local _status, _err = pcall(function()
+    local ii = 2
+    print( i + ii )
+  )
+  if not _status then error("`using` statement failed")
+end

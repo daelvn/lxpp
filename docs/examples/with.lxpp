@@ -1,0 +1,40 @@
+-- ==== --
+-- Lxpp - With Statement
+-- Sets a variable to an expression locally for the scope of the block
+with s = ", World!" do
+  print("Hello"..s)
+end
+---- Turns into ----
+do local s = ", World!"
+  print("Hello"..s)
+end
+
+-- ==== --
+-- Lxpp - If With
+-- Uses the expression as the if condition and makes it availiable locally in the scope
+if with m = string.match("hello (there)", "%b()") then
+  print(m)
+end
+---- Turns into ----
+if string.match("hello (there)", "%b()") then
+  local m = string.match("hello (there)", "%b")
+  print(m)
+end
+--------------------
+if with self.str = string.match("hello (there)", "%b()") then end
+---- Turns into ----
+if string.match("hello (there)", "%b()") then
+  self.str = string.match("hello (there)", "%b()")
+end
+
+-- ==== --
+-- Lxpp - While With
+-- Uses the expression as the while condition and makes it availiable locally in the scope
+while with m = string.match(changingString, "%b()") do
+  print(m)
+end
+---- Turns into ----
+while string.match(changingString, "%b()") do
+  local m = string.match("hello (there)", "%b()")
+  print(m)
+end

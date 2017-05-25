@@ -1,0 +1,21 @@
+-- ==== --
+-- Lxpp - Private Keyword
+-- Makes a function or variable availiable only for the class, and not exposed.
+class ExampleClass
+  private realAge ?= 42
+  age ?= 32
+end
+local instance = new ExampleClass
+print ( instance.age )
+print ( instance._realAge ) -- Error: Attempt to access private variable, use metatables
+---- Turns into ----
+local ExampleClass = {}
+function ExampleClass.new(_object)
+  _object = _object or {}
+  local realAge = 42
+  _object.age = 32
+  -- # --
+  setmetatable(_object, self)
+  self.__index = self
+  return _object
+end

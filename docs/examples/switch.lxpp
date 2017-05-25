@@ -1,0 +1,19 @@
+-- ==== --
+-- Lxpp - Switch statement
+-- Compares a value with other patterns, values or variables and executes a case
+switch input
+  case "y" do inCaseYes() end
+  case "n" do inCaseNo() end
+  default do error("Input is not valid") end
+end
+---- Turns into ----
+-- Using lxpp.switch
+lxpp.switch(input, {
+  "y" = function() inCaseYes() end,
+  "n" = function() inCaseNo() end,
+  "_default_" = function() error("Input is not valid") end
+})
+-- Native
+if input == "y" then inCaseYes() elseif
+   input == "n" then inCaseNo() else
+   error("Input is not valid") end

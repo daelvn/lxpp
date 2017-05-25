@@ -1,0 +1,13 @@
+-- ==== --
+-- Lxpp - Public Keyword
+-- Moves a function or variable to the export table
+namespace lxpp
+public define testFunction (string printString)
+  print ( printString )
+end
+---- Turns into ----
+local lxpp = {}
+function lxpp.testFunction (printString)
+  if type(printString) ~= "string" then error("Type of `printString` is not `string`") end
+  print ( printString )
+end

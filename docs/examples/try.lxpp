@@ -1,0 +1,18 @@
+-- ==== --
+-- Lxpp - Try Statement
+-- Better error handling
+try
+  print ( "invalid code" + 1 )
+except
+  print "Error was caught"
+end
+---- Turns into ----
+do local _status, _err = pcall(function()
+    print ( "invalid code" + 1 )
+    end
+  )
+  if not _status then pcall(function()
+    print "Error was caught"
+    end
+  )
+end

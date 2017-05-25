@@ -1,0 +1,6 @@
+-- ==== --
+-- Lxpp - New Statement
+-- Creates a new instance of a class
+local newInstance = new HttpConnection
+---- Turns into ----
+local newInstance = HttpConnection:new()
