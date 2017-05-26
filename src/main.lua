@@ -304,6 +304,12 @@ local function defineClass (lines)
           if types[i] == "normal" then
             lines[lc] = lines[lc]:replace(m, "local %1 = {}\nfunction %1:new(_object)\n_object = _object or {}")
             noClass = false
+          elseif types[i] == "extends" then
+            lines[lc] = lines[lc]:replace(m, "local %1 = {}\nfunction %1:new(_object)\n_object = _object or new %2")
+            noClass = false
+          elseif types[i] == "implements" then
+            lines[lc] = lines[lc]:replace(m, "local %1 = lxpp.implements( %2 )\nfunction %1:new(_object)\n_object = _object or {}")
+            noClass = false
           end
         end
       end
