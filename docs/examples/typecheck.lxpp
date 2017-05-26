@@ -2,11 +2,22 @@
 -- Lxpp - Typechecking
 -- Creates variables that always have typechecking
 local string myString = "This will be typechecked"
-print ( myString )
+print ( &myString )
+
 local string anotherString = 15
-print ( anotherString )
+print ( &anotherString )
+
+local string myOtherString = "This will be typechecked"
+print ( myOtherString )
+
+local string myAnotherString = 15
+print ( myAnotherString )
 ---- Turns into ----
 local myString = "This will be typechecked"
 print ( type(myString) == "string" and myString or error("`myString` is not type `string`") )
 local anotherString = 15
 print ( type(anotherString) == "string" and anotherString or error("`anotherString` is not type `string`") )
+local myOtherString = "This won't be typechecked"
+print ( myString )
+local myAnotherString = 15
+print ( myAnotherString )

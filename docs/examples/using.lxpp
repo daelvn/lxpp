@@ -11,5 +11,5 @@ do local i = 5
     local ii = 2
     print( i + ii )
   )
-  if not _status then error("`using` statement failed")
+  if not _status then error("`using` statement failed") end
 end

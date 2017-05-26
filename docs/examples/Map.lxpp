@@ -1,0 +1,49 @@
+-- ==== --
+-- Lxpp - Map Typeclass
+-- Complex table with extra functions and shorthands
+class Map
+  private _m = {}
+  -- Map#k
+  method get (any k)
+    return _m[&k]
+  end
+  -- Map#k = v
+  method set (any k, any v)
+    _m[&k] = v
+    return true
+  end
+  -- Map#d!k / Map#k = nil
+  method delete (any k)
+    _m[&k] = nil
+    return true
+  end
+  -- Map#?
+  method length ()
+    return #_m
+  end
+  -- Map#!
+  method clone ()
+    return _m
+  end
+  -- Map#k?k
+  method findk (any k)
+    return _m[&k]
+  end
+  -- Map#v?v
+  method findv (any v)
+    for k,va in pairs(_m) do
+      if v == va then return k end
+    end
+    return false
+  end
+  -- Map#k>k,k
+  method movek (any ki, any ke)
+    _m[&ke] = _m[&ki]
+    _m[&ki] = nil
+  end
+  -- Map#v>v,k
+  method movev (any vi, any ke)
+    _m[&ke] = _m[ self.findv (&vi) ]
+    _m[&ke] = nil
+  end
+end
