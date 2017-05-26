@@ -178,7 +178,7 @@ local replacePatterns = {
                   ["1"] = "&([a-zA-Z_][a-zA-Z0-9_.]*)",
                 },
     replace   = {
-                  ["1"] = "type(%1) == \"//%1//\" and %1 or error(\"`%1` is not type `//%1//`\")",
+                  ["1"] = "type(%1) == \"//lxpp.variableTypes['%1']//\" and %1 or error(\"`%1` is not type `//lxpp.variableTypes['%1']//`\")",
                 }
   },
   -- using
@@ -263,6 +263,7 @@ end
 
 -- Classes, Extends, Implements
 local function defineClass (lines)
+  -- Matches for the classes
   local matches = {
     "class ([a-zA-Z_][a-zA-Z0-9_.]*)",
     "class ([a-zA-Z_][a-zA-Z0-9_.]*) extends ([a-zA-Z_][a-zA-Z0-9_.]*)",
@@ -273,9 +274,10 @@ local function defineClass (lines)
     "extended",
     "implemented"
   }
+  -- Matches for the elements inside the classes
   local blockMatches = {
-    "[^p][^r][^i][^v][^a][^t][^e][^ ]([a-zA-Z_][a-zA-Z0-9_.]*)%s(*[?]*=)%s*(.+)",
-    "private ([a-zA-Z_][a-zA-Z0-9_.]*)%s(*[?]*=)%s*(.+)",
+    "[^p][^r][^i][^v][^a][^t][^e][^ ]([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.+)",
+    "private ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.+)",
     "[^p][^r][^i][^v][^a][^t][^e][^ ]method ([a-zA-Z_][a-zA-Z0-9_.]*)",
     "private method ([a-zA-Z_][a-zA-Z0-9_.]*)"
   }
@@ -285,16 +287,20 @@ local function defineClass (lines)
     "method",
     "private-method"
   }
+  -- Loop variables
   local lc = 1
   local markers = {}
   local noClass = true
   while lc <= #lines do
+    -- Iterate lines
     if noClass then
+      -- Not inside a class, find for a class
       for i, m in ipairs(matches) do
         if lines[lc]:match( m ) then
           local marker = {}
           marker.type = "lxpp.class.start"
           marker.location = lc
+          --
           if types[i] == "normal" then
             lines[lc] = lines[lc]:replace(m, "local %1 = {}\nfunction %1:new(_object)\n_object = _object or {}")
             noClass = false
@@ -302,7 +308,46 @@ local function defineClass (lines)
         end
       end
     else
-      -- Check properties and methods
+      -- Inside a class, parse other elements
+      for i, m in ipairs(blockMatches) do
+        if lines[lc]:match( m ) then
+          if blockTypes[i] == "property" then
+            -- Simple property parsing
+            lines[lc] = lines[lc]:replace(m, "_object.%1 %2 %3")
+          elseif (blockTypes[i] == "method") or (blockTypes[i] == "private-method") then
+            -- Generic method replacement, adapted for both private and local
+            if blockTypes[i] == "method" then
+              lines[lc] = lines[lc]:replace(m, "self.%1 = function ")
+            else
+              lines[lc] = lines[lc]:replace(m, "local %1 = function ")
+            end
+            -- Matches for argument types
+            local typeMatches = {
+              "string ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "number ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "table ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "boolean ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "any ([a-zA-Z_][a-zA-Z0-9_.]*)"
+            }
+            local types = {
+              "string",
+              "number",
+              "table",
+              "boolean",
+              "any"
+            }
+            -- Match the arguments' types
+            for ii, mm in ipairs(typeMatches) do
+              for match, varName in lines[lc]:gmatch( mm ) do
+                -- Add to the typecheck list
+                variableTypes[varName] = types[ii]
+                -- Remove type signature
+                lines[lc]:replace(mm, "%1")
+              end
+            end
+          end
+        end
+      end
     end
   end
 end

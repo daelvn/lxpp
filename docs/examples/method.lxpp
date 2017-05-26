@@ -23,3 +23,18 @@ end
 
 local Toby = Dog:new()
 Toby:fetch("GNU/Ball")
+
+-- ==== --
+-- Lxpp - Special methods
+-- Methods that are automatically executed at certain events
+class ExampleClass
+  method _init_ ()
+    -- Run when creating a new instance of the class
+  end
+  method _first_ ()
+    -- Run when creating the first instance of the class
+  end
+  method _rules_ ()
+    -- Run when declared (inside the class), used to add rules to Lxpp.
+  end
+end

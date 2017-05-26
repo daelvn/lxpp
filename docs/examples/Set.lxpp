@@ -1,0 +1,43 @@
+-- ==== --
+-- Lxpp - Set Typeclass
+-- Unindexed table
+class Set
+  private _l = {}
+  method _rules_ ()
+    lxpp.addRule ( {
+      condition = "[a-zA-Z_][a-zA-Z0-9_.]*&[d?!]*",
+      capture   = {
+                    ["1"] = "([a-zA-Z_][a-zA-Z0-9_.]*)&%s*=%s*(.-)[\n;]",
+                    ["2"] = "([a-zA-Z_][a-zA-Z0-9_.]*)&d!%s*([a-zA-Z_][a-zA-Z0-9_.]*),([a-zA-Z_][a-zA-Z0-9_.]*)",
+                    ["3"] = "([a-zA-Z_][a-zA-Z0-9_.]*)&?([a-zA-Z_][a-zA-Z0-9_.]*)",
+                    ["4"] = "([a-zA-Z_][a-zA-Z0-9_.]*)&!([a-zA-Z_][a-zA-Z0-9_.]*)",
+                  },
+      replace   = {
+                    ["1"] = "%1:set ( %2 )",
+                    ["2"] = "%1:delete ( %2 )",
+                    ["3"] = "%1:clone ()",
+                    ["4"] = "%1:length ()",
+                  },
+    } )
+  end
+  -- Set& =
+  method set (any v)
+    _l[&v] = true
+  end
+  -- Set&d!v
+  method delete (any v)
+    _l[&v] = nil
+  end
+  -- Set&?
+  method length ()
+    return #_l
+  end
+  -- Set&!
+  method clone ()
+    local clone = {}
+    for k,v in ipairs(_l) do
+      clone[k] = v
+    end
+    return clone
+  end
+end

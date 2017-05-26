@@ -3,6 +3,31 @@
 -- Complex table with extra functions and shorthands
 class Map
   private _m = {}
+  method _rules_ ()
+    lxpp.addRule ( {
+      condition = "[a-zA-Z_][a-zA-Z0-9_.]*#[kv?!]*",
+      capture   = {
+                    ["1"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#k>%s*([a-zA-Z_][a-zA-Z0-9_.]*),([a-zA-Z_][a-zA-Z0-9_.]*)",
+                    ["2"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#v>%s*([a-zA-Z_][a-zA-Z0-9_.]*),([a-zA-Z_][a-zA-Z0-9_.]*)",
+                    ["3"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#k%?%s*([a-zA-Z_][a-zA-Z0-9_.]*)",
+                    ["4"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#v%?%s*([a-zA-Z_][a-zA-Z0-9_.]*)",
+                    ["5"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#%!",
+                    ["6"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#%?",
+                    ["7"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#([a-zA-Z_][a-zA-Z0-9_.]*)%s*=(.-)[\n;]",
+                    ["8"] = "([a-zA-Z_][a-zA-Z0-9_.]*)#([a-zA-Z_][a-zA-Z0-9_.]*)"
+                  },
+      replace   = {
+                    ["1"] = "%1:movek ( %2, %3 )",
+                    ["2"] = "%1:movev ( %2, %3 )",
+                    ["3"] = "%1:findk ( %2 )",
+                    ["4"] = "%1:findv ( %2 )",
+                    ["5"] = "%1:clone ()",
+                    ["6"] = "%1:length ()",
+                    ["7"] = "%1:set ( %2, %3 )",
+                    ["8"] = "%1:get ( %2 )"
+                  },
+      } )
+  end
   -- Map#k
   method get (any k)
     return _m[&k]
@@ -23,7 +48,11 @@ class Map
   end
   -- Map#!
   method clone ()
-    return _m
+    local clone = {}
+    for k,v in ipairs(_m) do
+      clone[k] = v
+    end
+    return clone
   end
   -- Map#k?k
   method findk (any k)

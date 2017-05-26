@@ -1,0 +1,64 @@
+-- ==== --
+-- Lxpp - Stack Typeclass
+-- Functional stack
+class Stack
+  private _s = {}
+  method _rules_ ()
+    lxpp.addRule ( {
+      condition = "[a-zA-Z_][a-zA-Z0-9_.]*$[><rd?!]*",
+      capture   = {
+                    ["1"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$<%s*(.-)[\n;]",
+                    ["2"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$>",
+                    ["3"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$>?",
+                    ["4"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$r!(%d+)",
+                    ["5"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$d!",
+                    ["6"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$?",
+                    ["7"] = "([a-zA-Z_][a-zA-Z0-9_.]*)$!"
+                  },
+      replace   = {
+                    ["1"] = "%1:push ( %2 )",
+                    ["2"] = "%1:pop ()",
+                    ["3"] = "%1:peek ()",
+                    ["4"] = "%1:read ( %2 )",
+                    ["5"] = "%1:reset ()",
+                    ["6"] = "%1:length ()",
+                    ["7"] = "%1:clone ()"
+                  },
+    } )
+  end
+  -- Stack&<
+  method push (any v)
+    table.insert ( _s, &v )
+  end
+  -- Stack&>
+  method pop (number popValueAmount)
+    local poppedValues = {}
+    popValueAmount -= 1
+    for i=0, popValueAmount do
+      table.insert( poppedValues, _s[#_s-i] )
+      _s[#_s-i] = nil
+    end
+    return table.unpack( poppedValues )
+  end
+  -- Stack&>?
+  method peek (number peekValueAmount)
+    local peekedValues = {}
+    peekValueAmount -= 1
+    for i=0, peekValueAmount do
+      table.insert( peekedValues, _s[#_s-i] )
+    end
+    return table.unpack( peekedValues )
+  end
+  -- Stack&?
+  method length ()
+    return #_s
+  end
+  -- Stack&!
+  method clone ()
+    local clone = {}
+    for k,v in ipairs(_s) do
+      clone[k] = v
+    end
+    return clone
+  end
+end
