@@ -236,6 +236,21 @@ local replacePatterns = {
                   ["1"] = "do local %1",
                 }
   },
+  -- class (Only metatable and return)
+  {
+    condition = "class [a-zA-Z_][a-zA-Z0-9_.]*",
+    addMode   = "lxpp.class.open"
+  },
+  {
+    condition = "end",
+    modeCond  = "lxpp.class.open",
+    capture   = {
+                  ["1"] = "end",
+                },
+    replace   = {
+                  ["1"] = "setmetatable(_object, self)\nself.__index = self\nreturn _object\nend",
+                }
+  }
 }
 
 -- Special functions for complex keywords
@@ -355,5 +370,81 @@ local function defineClass (lines)
         end
       end
     end
+    lc = lc + 1
+  end
+end
+
+-- Interface parsing
+local function defineInterface (lines)
+  -- Matches for the elements inside the classes
+  local blockMatches = {
+    "[^p][^r][^i][^v][^a][^t][^e][^ ]([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.+)",
+    "private ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.+)",
+    "[^p][^r][^i][^v][^a][^t][^e][^ ]method ([a-zA-Z_][a-zA-Z0-9_.]*)",
+    "private method ([a-zA-Z_][a-zA-Z0-9_.]*)"
+  }
+  local blockTypes = {
+    "property",
+    "private-property",
+    "method",
+    "private-method"
+  }
+  -- Loop variables
+  local lc = 1
+  local markers = {}
+  local noInt = true
+  while lc <= #lines do
+    -- Iterate lines
+    if noInt then
+      -- Not inside an interface
+      if lines[lc]:match( "interface ([a-zA-Z_][a-zA-Z0-9_.]*)" ) then
+        lines[lc] = lines[lc]:replace("interface ([a-zA-Z_][a-zA-Z0-9_.]*)", "local %1 = {")
+        noInt = false
+      end
+    else
+      -- Inside an interface, parse other elements
+      for i, m in ipairs(blockMatches) do
+        if lines[lc]:match( m ) then
+          if blockTypes[i] == "property" then
+            -- Simple property parsing
+            lines[lc] = lines[lc]:replace(m, "%1 %2 %3")
+          elseif blockTypes == "private-property" then
+            lines[lc] = lines[lc]:replace(m, "_%1 %2 %3")
+          elseif (blockTypes[i] == "method") or (blockTypes[i] == "private-method") then
+            -- Generic method replacement, adapted for both private and local
+            if blockTypes[i] == "method" then
+              lines[lc] = lines[lc]:replace(m, "%1 = function ")
+            else
+              lines[lc] = lines[lc]:replace(m, "_%1 = function ")
+            end
+            -- Matches for argument types
+            local typeMatches = {
+              "string ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "number ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "table ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "boolean ([a-zA-Z_][a-zA-Z0-9_.]*)",
+              "any ([a-zA-Z_][a-zA-Z0-9_.]*)"
+            }
+            local types = {
+              "string",
+              "number",
+              "table",
+              "boolean",
+              "any"
+            }
+            -- Match the arguments' types
+            for ii, mm in ipairs(typeMatches) do
+              for match, varName in lines[lc]:gmatch( mm ) do
+                -- Add to the typecheck list
+                variableTypes[varName] = types[ii]
+                -- Remove type signature
+                lines[lc]:replace(mm, "%1")
+              end
+            end
+          end
+        end
+      end
+    end
+    lc = lc + 1
   end
 end
