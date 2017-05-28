@@ -15,7 +15,7 @@ Description
 ]]--
 
 -- Linter: Make local
-local pairs, ipairs, print, tostring = pairs, ipairs, print, tostring
+local pairs, ipairs, print, tostring, table = pairs, ipairs, print, tostring, table
 
 -- Take first argument as a file
 local args = table.pack(...)
@@ -527,13 +527,18 @@ local function patternAccess (index)
   end
 end
 
--- DEBUG consoleLog flags
-local function consoleLogFlagModes()
-  consoleLog("  Printing current flags:")
-  for i,l in ipairs(lxppModes) do
-    consoleLog(" +"..l)
+-- Iterative string.find
+function string.ifind (s, pattern, _spos)
+  local positions = {}
+  while _spos <= s:len() do
+    local sPortion = s:sub(_spos)
+    local findStartPos, findEndPos = s:find(pattern)
+    table.insert(positions, {findStartPos, findEndPos})
+    _spos = findStartPos + 1
   end
+  return positions
 end
+
 
 local function executePattern (scope, line)
   if line:match( scope.condition ) then -- Match the condition to execute it
