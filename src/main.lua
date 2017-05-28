@@ -15,7 +15,7 @@ Description
 ]]--
 
 -- Linter: Make local
-local pairs, ipairs, print, tostring, table = pairs, ipairs, print, tostring, table
+local pairs, ipairs, print, tostring, table, string = pairs, ipairs, print, tostring, table, string
 
 -- Take first argument as a file
 local args = table.pack(...)
@@ -530,11 +530,12 @@ end
 -- Iterative string.find
 function string.ifind (s, pattern, _spos)
   local positions = {}
-  while _spos <= s:len() do
-    local sPortion = s:sub(_spos)
-    local findStartPos, findEndPos = s:find(pattern)
-    table.insert(positions, {findStartPos, findEndPos})
-    _spos = findStartPos + 1
+  local i = 0
+  local e = 0
+  while true do
+    i,e = s:find(pattern, i+1)    -- find 'next' newline
+    if i == nil then break end
+    table.insert(positions, {i,e})
   end
   return positions
 end
@@ -542,6 +543,16 @@ end
 
 local function executePattern (scope, line)
   if line:match( scope.condition ) then -- Match the condition to execute it
+    -- Check if it's inside of a string
+    local stringPositions = string.ifind(line, "[^\\][\"'](.-)[^\\][\"']")
+    local condPositions = string.ifind(line, scope.condition)
+    for _,condPositionPair in ipairs(condPositions) do
+      for _,stringPositionPair in ipairs(stringPositions) do
+        if condPositionPair[1] >= stringPositionPair[1] then return line end
+        if condPositionPair[2] <= stringPositionPair[2] then return line end
+      end
+    end
+    --
     consoleLog("Using scope: "..scope.name)
     consoleLog("  Line: " .. line)
     if scope.modeCond then
