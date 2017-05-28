@@ -128,18 +128,6 @@ local replacePatterns = {
                   ["1"] = "local",
                 }
   },
-  -- switch
-  {
-    name      = "keyword.control.switch.lxpp",
-    condition = "switch [a-zA-Z_][a-zA-Z0-9._]*",
-    capture   = {
-                  ["1"] = "switch ([a-zA-Z_][a-zA-Z0-9_.]*)",
-                },
-    replace   = {
-                  ["1"] = "lxpp.switch(%1, {", -- Remember to end with } ) in `end`
-                },
-    addMode   = "lxpp.switch.open"
-  },
   -- default
   {
     name      = "keyword.control.switch.default.lxpp",
@@ -151,6 +139,40 @@ local replacePatterns = {
     replace   = {
                   ["1"] = "\"_default_\" = function() ",
                 }
+  },
+  -- Case regex
+  {
+    name      = "keyword.control.switch.case.regex.lxpp",
+    condition = "case r",
+    capture   = {
+                  ["1"] = "case r(.-) do",
+                },
+    replace   = {
+                  ["1"] = "[%1..\"_lxpp.regex_\"] = function()",
+                }
+  },
+  -- Case
+  {
+    name      = "keyword.control.switch.case.lxpp",
+    condition = "case",
+    capture   = {
+                  ["1"] = "case (.-) do",
+                },
+    replace   = {
+                  ["1"] = "[%1] = function()",
+                }
+  },
+  -- switch
+  {
+    name      = "keyword.control.switch.lxpp",
+    condition = "switch [a-zA-Z_][a-zA-Z0-9._]*",
+    capture   = {
+                  ["1"] = "switch ([a-zA-Z_][a-zA-Z0-9_.]*)",
+                },
+    replace   = {
+                  ["1"] = "lxpp.switch(%1, {", -- Remember to end with } ) in `end`
+                },
+    addMode   = "lxpp.switch.open"
   },
   -- End Switch
   {

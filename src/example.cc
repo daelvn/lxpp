@@ -1,6 +1,7 @@
 -- Lxpp testing
 -- Starting with two comments
-print " with f = fs.open(\"blah.foo\", \"w\") do "
-  f.write("l")
-  f.close()
-print " end "
+switch value
+  case "nuts" do doSth() end
+  case r"%b()" do doSthElse() end
+  default do print( "Go nuts" ) end
+end
