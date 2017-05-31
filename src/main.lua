@@ -17,6 +17,9 @@ Description
 -- Linter: Make local
 local pairs, ipairs, print, tostring, table, string = pairs, ipairs, print, tostring, table, string
 
+-- Load ansicolors
+local libansi = dofile "src/lib/ansicolors.lua"
+
 -- Take first argument as a file
 local args = table.pack(...)
 
@@ -132,29 +135,31 @@ local replacePatterns = {
   {
     name      = "keyword.control.switch.default.lxpp",
     condition = "default do",
-    modeCond  = "lxpp.switch.open",
+    --modeCond  = "lxpp.switch.open",
     capture   = {
                   ["1"] = "default do",
                 },
     replace   = {
-                  ["1"] = "\"_default_\" = function() ",
+                  ["1"] = "[\"_default_\"] = function() ",
                 }
   },
   -- Case regex
   {
     name      = "keyword.control.switch.case.regex.lxpp",
     condition = "case r",
+    --modeCond  = "lxpp.switch.open",
     capture   = {
                   ["1"] = "case r(.-) do",
                 },
     replace   = {
-                  ["1"] = "[%1..\"_lxpp.regex_\"] = function()",
+                  ["1"] = "[%1..\"_regex\"] = function()",
                 }
   },
   -- Case
   {
     name      = "keyword.control.switch.case.lxpp",
     condition = "case",
+    --modeCond  = "lxpp.switch.open",
     capture   = {
                   ["1"] = "case (.-) do",
                 },
@@ -564,31 +569,37 @@ end
 
 
 local function executePattern (scope, line)
+  consoleLog(libansi.yellow.."Trying scope: "..scope.name)
   if line:match( scope.condition ) then -- Match the condition to execute it
     -- Check if it's inside of a string
+    consoleLog(libansi.magenta.."Matching strings...")
     local stringPositions = string.ifind(line, "[^\\][\"'](.-)[^\\][\"']")
     local condPositions = string.ifind(line, scope.condition)
     for _,condPositionPair in ipairs(condPositions) do
+      consoleLog(libansi.magenta.."  Condition match: "..line:sub(condPositionPair[1], condPositionPair[2]))
+      consoleLog(libansi.magenta..("    (%s:%s)"):format(tostring(condPositionPair[1]), tostring(condPositionPair[2])))
       for _,stringPositionPair in ipairs(stringPositions) do
-        if condPositionPair[1] >= stringPositionPair[1] then return line end
-        if condPositionPair[2] <= stringPositionPair[2] then return line end
+        consoleLog(libansi.magenta.."  Matched: "..line:sub(stringPositionPair[1], stringPositionPair[2]))
+        consoleLog(libansi.magenta..("    (%s:%s)"):format(tostring(stringPositionPair[1]), tostring(stringPositionPair[2])))
+        if condPositionPair[1] >= stringPositionPair[1]
+        and condPositionPair[2] <= stringPositionPair[2] then return line end
       end
     end
     --
-    consoleLog("Using scope: "..scope.name)
-    consoleLog("  Line: " .. line)
+    consoleLog(libansi.blue.."Using scope: "..scope.name)
+    consoleLog(libansi.cyan.."  Line: " .. line)
     if scope.modeCond then
-      consoleLog("  ----------")
+      consoleLog("  ----------" .. libansi.white)
       consoleLog("  Condition: "..scope.condition)
       consoleLog("  Mode condition: "..scope.modeCond)
-      consoleLog("  Found flag: "..tostring(lxppModes[ scope.modeCond ]))
+      consoleLog("  Mode status: "..tostring(lxppModes[ scope.modeCond ]))
       if not lxppModes[ scope.modeCond ] then
-        consoleLog("  Mode condition was not matched. Returning line.")
+        consoleLog(libansi.red.."  Mode condition was not matched. Returning line.")
         return line
       end
       if scope.addMode then lxppModes[scope.addMode] = true end
       if scope.rmMode then lxppModes[scope.rmMode] = nil end
-      consoleLog( "  Mode condition was matched. Continuing.")
+      consoleLog(libansi.green.."  Mode condition was matched. Continuing.")
     end
     for ck, cm in pairs( scope.capture ) do
       for rk, rm in pairs( scope.replace ) do
@@ -607,8 +618,10 @@ local function executePattern (scope, line)
         end
       end
     end
+    -- Return the line
+    consoleLog(libansi.cyan.."  ----------")
+    consoleLog("  Replaced: " .. line)
   end
-  -- Return the line
   return line
 end
 
@@ -628,14 +641,17 @@ end
 -- Everything else
 while true do
   for i,l in ipairs(lxppFileLines) do
-    lxppFileLines[i] = defineFunction( lxppFileLines[i] )
-    for _, pattern in ipairs(replacePatterns) do
-      lxppFileLines[i] = executePattern( pattern, lxppFileLines[i] )
+    consoleLog(libansi.cyan..libansi.underscore..": "..l..libansi.reset)
+    if not l:match("^%-%-[%[]*") then
+      lxppFileLines[i] = defineFunction( lxppFileLines[i] )
+      for _, pattern in ipairs(replacePatterns) do
+        lxppFileLines[i] = executePattern( pattern, lxppFileLines[i] )
+      end
     end
   end
   break
 end
 
 for i,l in ipairs(lxppFileLines) do
-  consoleLog (i..": "..l)
+  consoleLog (libansi.white..i..": "..l)
 end
