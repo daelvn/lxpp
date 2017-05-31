@@ -140,7 +140,7 @@ local replacePatterns = {
                   ["1"] = "default do",
                 },
     replace   = {
-                  ["1"] = "[\"_default_\"] = function() ",
+                  ["1"] = "[\"_default_\"] = function()",
                 }
   },
   -- Case regex
@@ -213,7 +213,7 @@ local replacePatterns = {
                   ["1"] = "except",
                 },
     replace   = {
-                  ["1"] = "end ) \nif not _status then pcall(function()",
+                  ["1"] = "  end ) \n  if not _status then pcall(function()",
                 }
   },
   -- End Try
@@ -225,7 +225,7 @@ local replacePatterns = {
                   ["1"] = "end",
                 },
     replace   = {
-                  ["1"] = "end ) end",
+                  ["1"] = "  end )\nend",
                 },
     rmMode    = "lxpp.try.open"
   },
@@ -323,11 +323,11 @@ local replacePatterns = {
 -- local type name = value
 local function declareVariableType (line)
   local matches = {
-    "local string ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.-)",
-    "local number ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.-)",
-    "local table ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.-)",
-    "local boolean ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.-)",
-    "local any ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([?]*=)%s*(.-)",
+    "local string ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([%?]*=)%s*(.+)",
+    "local number ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([%?]*=)%s*(.+)",
+    "local table ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([%?]*=)%s*(.+)",
+    "local boolean ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([%?]*=)%s*(.+)",
+    "local any ([a-zA-Z_][a-zA-Z0-9_.]*)%s*([%?]*=)%s*(.+)",
   }
   local types = {
     "string", "number", "table", "boolean", "any"
@@ -336,7 +336,7 @@ local function declareVariableType (line)
     if line:match( m ) then
       local whole, id, value = line:match( m )
       variableTypes[id] = types[i]
-      line = line:gsub(line:match ( m ), "local %1 %2 %3")
+      line = line:gsub(m, "local %1 %2 %3")
     end
   end
   return line
@@ -567,14 +567,17 @@ function string.ifind (s, pattern, _spos)
   return positions
 end
 
-
+local breakLineExecution = false
 local function executePattern (scope, line)
   consoleLog(libansi.yellow.."Trying scope: "..scope.name)
   if line:match( scope.condition ) then -- Match the condition to execute it
     -- Check if it's inside of a string
     consoleLog(libansi.magenta.."Matching strings...")
+    -- Get the string matches
     local stringPositions = string.ifind(line, "[^\\][\"'](.-)[^\\][\"']")
+    -- Check the condition position matches
     local condPositions = string.ifind(line, scope.condition)
+    -- Check that no condition is inside a string
     for _,condPositionPair in ipairs(condPositions) do
       consoleLog(libansi.magenta.."  Condition match: "..line:sub(condPositionPair[1], condPositionPair[2]))
       consoleLog(libansi.magenta..("    (%s:%s)"):format(tostring(condPositionPair[1]), tostring(condPositionPair[2])))
@@ -588,6 +591,7 @@ local function executePattern (scope, line)
     --
     consoleLog(libansi.blue.."Using scope: "..scope.name)
     consoleLog(libansi.cyan.."  Line: " .. line)
+    -- Check if the scope requires a mode
     if scope.modeCond then
       consoleLog("  ----------" .. libansi.white)
       consoleLog("  Condition: "..scope.condition)
@@ -597,15 +601,24 @@ local function executePattern (scope, line)
         consoleLog(libansi.red.."  Mode condition was not matched. Returning line.")
         return line
       end
-      if scope.addMode then lxppModes[scope.addMode] = true end
-      if scope.rmMode then lxppModes[scope.rmMode] = nil end
       consoleLog(libansi.green.."  Mode condition was matched. Continuing.")
     end
+    -- Change modes
+    if scope.addMode then
+      consoleLog(libansi.green.."  + "..scope.addMode)
+      lxppModes[scope.addMode] = true
+    end
+    if scope.rmMode then
+      consoleLog(libansi.red.."  - "..scope.rmMode)
+      lxppModes[scope.rmMode] = nil
+    end
+    -- Replace captures
     for ck, cm in pairs( scope.capture ) do
       for rk, rm in pairs( scope.replace ) do
         if ck == rk then
-          if cm:match("//(.-)//") then
-            local glob, index = cm:match("//(.-)//")
+          if cm:match("//(.+)//") then
+            local glob, index = cm:match("//(.+)//")
+            consoleLog(libansi.white.."  Accessing variable: "..index)
             cm:gsub("//.-//", patternAccess(index))
           end
           if not ck:match("%!$") then
@@ -621,6 +634,7 @@ local function executePattern (scope, line)
     -- Return the line
     consoleLog(libansi.cyan.."  ----------")
     consoleLog("  Replaced: " .. line)
+    breakLineExecution = true
   end
   return line
 end
@@ -643,8 +657,13 @@ while true do
   for i,l in ipairs(lxppFileLines) do
     consoleLog(libansi.cyan..libansi.underscore..": "..l..libansi.reset)
     if not l:match("^%-%-[%[]*") then
+      lxppFileLines[i] = declareVariableType( lxppFileLines[i] )
       lxppFileLines[i] = defineFunction( lxppFileLines[i] )
       for _, pattern in ipairs(replacePatterns) do
+        if breakLineExecution then
+          breakLineExecution = false
+          break
+        end
         lxppFileLines[i] = executePattern( pattern, lxppFileLines[i] )
       end
     end
@@ -652,6 +671,9 @@ while true do
   break
 end
 
+consoleLog(libansi.yellow.."=== Result =============================================")
 for i,l in ipairs(lxppFileLines) do
-  consoleLog (libansi.white..i..": "..l)
+  l = l:gsub("\n", "\n"..libansi.yellow.." : "..libansi.white)
+  consoleLog (libansi.yellow..i..": "..libansi.white..l)
 end
+consoleLog(libansi.yellow.."=== Result =============================================")
