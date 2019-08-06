@@ -6,4 +6,4 @@ Just clone this repository
 `lua src/main.lua example.lxpp`
 Not all functions are availiable
 ## License
-This project uses the MIT License
+This project has been released to the public domain.

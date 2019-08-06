@@ -18,7 +18,7 @@ Description
 local pairs, ipairs, print, tostring, table, string = pairs, ipairs, print, tostring, table, string
 
 -- Load ansicolors
-local libansi = dofile "src/lib/ansicolors.lua"
+local libansi = require "ansicolors"
 
 -- Take first argument as a file
 local args = table.pack(...)
